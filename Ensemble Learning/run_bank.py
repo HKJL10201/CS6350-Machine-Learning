@@ -1,5 +1,6 @@
 import csv
 import math
+from os import error
 
 TRAIN_FILE='./bank/train.csv'
 TEST_FILE='./bank/test.csv'
@@ -48,7 +49,7 @@ TEST_FILE='./bank/test.csv'
 
 columns=['age','job','marital','education','default','balance','housing','loan','contact','day','month','duration','campaign','pdays','previous','poutcome','label']
 attributes=['age','job','marital','education','default','balance','housing','loan','contact','day','month','duration','campaign','pdays','previous','poutcome']
-
+numeric=['age','balance','day','duration','campaign','pdays','previous']
 
 ATTRIBUTES,MST=None,None
 
@@ -58,7 +59,7 @@ def init_attr():
     anal={}
     reader=csv.reader(open(TRAIN_FILE,'r'))
     for c in columns:
-        if c==columns[-1]:
+        if c==columns[-1]: # ignore "label"
             continue
         dataset[c]=[]
         anal[c]={}
@@ -289,3 +290,52 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+def sign(n):
+    if n > 0:
+        return 1
+    else:
+        return -1
+
+class Adaboost:
+    def __init__(self,X,Y) -> None:
+        self.D=[]
+        self.m=0
+        self.t=0
+        self.x=[]
+        self.y=[]
+        self.A=[]
+        self.H=[]
+
+        self.x=X
+        self.y=Y
+        self.m=len(X)
+        self.D=[1/self.m for i in range(self.m)]
+    
+    def error(self,h):
+        s=0
+        for i in range(self.m):
+            s+=self.D[i]*self.y[i]*h(self.x[i])
+        return 0.5-0.5*s
+    
+    def vote(self,e):
+        return 0.5*math.log(((1-e)/e),math.e)
+
+    def update_D(self,h):
+        e=self.error(h)
+        a=self.vote(e)
+        Z=0
+        for i in range(self.m):
+            self.D[i]=self.D[i]*math.exp(-a*self.y[i]*h(self.x[i]))
+            Z+=self.D[i]
+        for i in range(self.m):
+            self.D[i]=self.D[i]/Z
+        self.A.append(a)
+        self.H.append(h)
+        self.t+=1
+    
+    def predict(self,x):
+        s=0
+        for i in range(self.t):
+            s+=self.A[i]*self.H[i](x)
+        return sign(s)

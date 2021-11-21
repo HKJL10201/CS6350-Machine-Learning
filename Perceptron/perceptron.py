@@ -4,7 +4,7 @@ import csv
 T = 10
 train_file = 'train.csv'
 test_file = 'test.csv'
-learning_rate = 0.1
+learning_rate = 100
 
 
 def load_data(filename):
